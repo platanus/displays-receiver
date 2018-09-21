@@ -1,9 +1,8 @@
-FROM petrosagg/resin-wpe:raspberrypi3-30c7465
-
-RUN echo America/Santiago | tee /etc/timezone
-
-ENV TZ=CLST-03:00
+FROM platanus/display-wpe:latest
 
 COPY wpe-init /wpe-init
+COPY docker-entrypoint.sh /docker-entrypoint.sh
+
+ENTRYPOINT [ "./docker-entrypoint.sh" ]
 
 CMD [ "/wpe-init" ]
