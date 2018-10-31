@@ -1,10 +1,21 @@
-#!/bin/sh
+#!/bin/bash
 
-uuid=$(ip link show eth0 | awk '/ether/ {print $2}' | sha256sum | cut -d " " -f 1)
-register_url=http://192.168.86.25:3000/displays
+url="file:///var/www/index.html"
 
-export WPE_URL=$register_url/$uuid
+if [[ -n $DISPLAYS_SERVER_HOST ]]; then
+  uuid=$(ip link show eth0 | awk '/ether/ {print $2}' | sha256sum | cut -c1-8)
+  url=${DISPLAYS_SERVER_HOST}/displays/$uuid
 
-curl -XPUT $WPE_URL
+  curl "$url"
+fi
 
-exec $@
+webkitbrowser_config_path="/etc/WPEFramework/plugins/WebKitBrowser.json"
+config=$(cat $webkitbrowser_config_path)
+echo -n $config | jq ".configuration.url = \"$url\"" > $webkitbrowser_config_path
+
+udevd &
+udevadm trigger
+
+fbcp &
+
+exec "$@"
